@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c2734">
+  <meta name="description" content="Cổng theo dõi chỉ số và truy cập công cụ vận hành Miền Đông KV32.">
+  <title>Trung tâm chỉ số · Miền Đông KV32</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" aria-label="Điều hướng chính">
+      <a class="brand" href="#tong-quan" aria-label="Về trang tổng quan">
+        <span class="brand-mark">M<span>.</span></span>
+        <span><strong>Miền Đông</strong><small>TRUNG TÂM CHỈ SỐ · KV32</small></span>
+      </a>
+      <div class="sidebar-label">KHÔNG GIAN LÀM VIỆC</div>
+      <nav id="sideNav" class="side-nav">
+        <a href="#tong-quan" class="active" data-nav="tong-quan"><span>◫</span> Tổng quan</a>
+        <a href="#nhan-vien" data-nav="nhan-vien"><span>♙</span> Nhân viên</a>
+        <a href="#nha-thuoc" data-nav="nha-thuoc"><span>▣</span> Nhà thuốc</a>
+        <a href="#trung-tam" data-nav="trung-tam"><span>✚</span> Trung tâm</a>
+        <a href="#tu-van-vien" data-nav="tu-van-vien"><span>◇</span> Tư vấn viên</a>
+        <a href="#vaccine" data-nav="vaccine"><span>✳</span> Vaccine & khách hàng</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="note-dot"></span>
+        <strong>Danh mục đã kiểm kê</strong>
+        <p>12 liên kết · 11 ứng dụng. Các số liệu tổng hợp sẽ xuất hiện sau khi kết nối nguồn dữ liệu.</p>
+      </div>
+      <p class="sidebar-foot">CỔNG CÔNG CỤ · BẢN DỰNG TỪ 12 LINK</p>
+    </aside>
+
+    <main id="tong-quan" class="main">
+      <header class="topbar">
+        <button id="menuButton" class="menu-button" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
+        <div class="breadcrumb">Không gian làm việc <span>/</span> <strong>Tổng quan</strong></div>
+        <div class="top-right"><span class="live-dot"></span> Danh mục công cụ <span class="top-separator"></span> KV32</div>
+      </header>
+
+      <div class="content">
+        <section class="hero" aria-labelledby="heroTitle">
+          <div class="hero-copy">
+            <span class="eyebrow"><span class="eyebrow-line"></span> BẢNG ĐIỀU KHIỂN MIỀN ĐÔNG</span>
+            <h1 id="heroTitle">Một nơi để theo dõi<br><em>toàn bộ vận hành.</em></h1>
+            <p>Đi đến đúng báo cáo theo nhân viên, nhà thuốc, trung tâm và tư vấn viên. Nguồn chỉ số được ghi rõ để bạn biết dữ liệu nào đã sẵn sàng.</p>
+            <a class="hero-action" href="#cong-cu">Khám phá công cụ <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+            <div class="art-card card-one"><small>DOANH SỐ</small><b>Nhân viên</b><span>↗</span></div>
+            <div class="art-card card-two"><small>HIỆU SUẤT</small><b>Nhà thuốc</b><span>↗</span></div>
+            <div class="art-card card-three"><small>CHỈ TIÊU</small><b>Trung tâm</b><span>↗</span></div>
+            <div class="art-core">M<span>.</span></div>
+          </div>
+        </section>
+
+        <section class="summary" aria-label="Tình trạng hệ thống">
+          <div class="summary-card"><div class="summary-icon blue">▦</div><div><span>Ứng dụng đã kiểm kê</span><strong>11</strong><small>Từ 12 liên kết bạn cung cấp</small></div></div>
+          <div class="summary-card"><div class="summary-icon orange">⇧</div><div><span>Công cụ nhận file Excel</span><strong>8</strong><small>Cần file mẫu để nối dữ liệu</small></div></div>
+          <div class="summary-card"><div class="summary-icon green">▤</div><div><span>Nhóm theo dõi</span><strong>5</strong><small>Nhân viên · Shop · Trung tâm · TVV · Vaccine</small></div></div>
+          <div class="summary-card"><div class="summary-icon purple">⌑</div><div><span>Liên kết trùng</span><strong>1</strong><small>Push KPI Shop và link Apps Script</small></div></div>
+        </section>
+
+        <section id="chi-so" class="section metrics-section" aria-labelledby="metricsTitle">
+          <div class="section-heading"><div><span class="section-kicker">BẢN ĐỒ DỮ LIỆU</span><h2 id="metricsTitle">Chỉ số cần theo dõi</h2><p>Nhấn vào nguồn để mở báo cáo gốc. Giá trị tổng hợp sẽ được nối sau khi có dữ liệu hoặc API.</p></div><span class="section-tag">Chưa kết nối dữ liệu</span></div>
+          <div id="metricGrid" class="metric-grid"></div>
+        </section>
+
+        <section id="cong-cu" class="section tools-section" aria-labelledby="toolsTitle">
+          <div class="section-heading"><div><span class="section-kicker">THƯ VIỆN ỨNG DỤNG</span><h2 id="toolsTitle">Công cụ theo nhóm</h2><p>11 ứng dụng đã được phân loại theo vai trò và công việc.</p></div></div>
+          <div class="tool-controls">
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Tìm công cụ hoặc chỉ số…" autocomplete="off"><kbd>/</kbd></label>
+            <div id="filterBar" class="filter-bar" aria-label="Lọc nhóm công cụ"></div>
+          </div>
+          <div id="toolGrid" class="tool-grid"></div>
+          <p id="emptyState" class="empty-state" hidden>Không tìm thấy công cụ phù hợp. Thử từ khóa khác.</p>
+        </section>
+
+        <section class="connection-banner" aria-labelledby="connectionTitle">
+          <div class="connection-icon">⌁</div>
+          <div><span class="section-kicker">BƯỚC KẾ TIẾP</span><h2 id="connectionTitle">Kết nối để có dashboard số liệu trực tiếp</h2><p>Các báo cáo tải Excel cần file mẫu và cấu trúc cột. Các trang đọc Google Sheet cần mã Apps Script hoặc API truy cập được cấp quyền. Không đưa dữ liệu nhân viên hay khách hàng vào mã nguồn GitHub công khai.</p></div>
+        </section>
+        <footer>Trung tâm chỉ số Miền Đông KV32 <span>·</span> Danh mục được lập từ các liên kết bạn cung cấp</footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
