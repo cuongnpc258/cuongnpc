@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASM Ping Push Portal</title>
+<style>
+/* =========================================================
+   DESIGN SYSTEM – Lấy cảm hứng từ Tabler, Taskharbor
+   ========================================================= */
+:root {
+  --primary: #1e3a8a;
+  --primary-600: #2563eb;
+  --primary-100: #dbeafe;
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --bg: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.06);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.12);
+  --sidebar-w: 240px;
+  --header-h: 60px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; font-size: 14px; }
+
+/* ---------- APP SHELL ---------- */
+.app-shell { display: flex; min-height: 100vh; }
+
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform .25s ease;
+}
+.sidebar-brand {
+  padding: 18px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-brand .logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-600));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 14px;
+}
+.sidebar-brand .name { font-weight: 700; font-size: 15px; color: var(--text); line-height: 1.2; }
+.sidebar-brand .name small { display: block; font-weight: 400; font-size: 11px; color: var(--text-muted); }
+
+.sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+.nav-section { margin-bottom: 20px; }
+.nav-section-title {
+  font-size: 10px; font-weight: 700; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: .8px;
+  padding: 0 10px; margin-bottom: 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  color: var(--text-muted); font-weight: 500; font-size: 13px;
+  cursor: pointer; border: none; background: none; width: 100%;
+  text-align: left; transition: .15s;
+}
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--primary-100); color: var(--primary); font-weight: 600; }
+.nav-item .ico { width: 18px; text-align: center; font-size: 15px; }
+.nav-item .count {
+  margin-left: auto; background: var(--border); color: var(--text-muted);
+  font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px;
+}
+.nav-item.active .count { background: var(--primary); color: #fff; }
+
+.sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--border); }
+.user-chip { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--primary-100); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+}
+.user-info .user-name { font-weight: 600; font-size: 12px; }
+.user-info .user-role { font-size: 10px; color: var(--text-muted); }
+
+/* ---------- MAIN ---------- */
+.main {
+  flex: 1; margin-left: var(--sidebar-w);
+  display: flex; flex-direction: column; min-width: 0;
+}
+
+/* ---------- HEADER ---------- */
+.app-header {
+  height: var(--header-h); background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; position: sticky; top: 0; z-index: 50; gap: 16px;
+}
+.header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.menu-toggle { display: none; background: none; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 16px; }
+.page-title { font-size: 17px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.page-sub { font-size: 12px; color: var(--text-muted); margin-left: 8px; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; border: 1px solid transparent;
+  transition: .15s; white-space: nowrap;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: #152e6e; }
+.btn-outline { background: var(--surface); color: var(--text-muted); border-color: var(--border); }
+.btn-outline:hover { background: var(--surface-2); color: var(--text); }
+.btn-warn { background: var(--warning-bg); color: var(--warning); border-color: #fcd34d; }
+.btn-warn:hover { background: #fde68a; }
+.btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 5px; }
+.btn-icon { padding: 6px; width: 30px; height: 30px; justify-content: center; }
+
+/* ---------- CONTENT ---------- */
+.content { padding: 20px 24px 40px; flex: 1; }
+.storage-note { margin-bottom: 16px; padding: 10px 14px; border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff; color: #1e40af; font-size: 12px; }
+.people-list { display: grid; gap: 8px; margin-top: 14px; }
+.person-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 7px; }
+.person-row strong { font-size: 13px; }
+.person-row small { color: var(--text-muted); }
+.data-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- KPI CARDS ---------- */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border); position: relative; overflow: hidden;
+}
+.kpi-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--primary-600);
+}
+.kpi-card.kpi-danger::before { background: var(--danger); }
+.kpi-card.kpi-warn::before { background: var(--warning); }
+.kpi-card.kpi-ok::before { background: var(--success); }
+.kpi-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+.kpi-value { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.kpi-card.kpi-danger .kpi-value { color: var(--danger); }
+.kpi-card.kpi-warn .kpi-value { color: var(--warning); }
+.kpi-card.kpi-ok .kpi-value { color: var(--success); }
+
+/* ---------- VIEW TABS ---------- */
+.view-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface); padding: 4px; border-radius: 8px; border: 1px solid var(--border); width: fit-content; }
+.view-tab {
+  padding: 7px 16px; border-radius: 6px; border: none; background: none;
+  font-size: 13px; font-weight: 600; color: var(--text-muted); transition: .15s;
+}
+.view-tab:hover { background: var(--surface-2); color: var(--text); }
+.view-tab.active { background: var(--primary); color: #fff; }
+
+/* ---------- TOOLBAR ---------- */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  margin-bottom: 14px;
+}
+.search-box {
+  flex: 1; min-width: 200px; max-width: 360px; position: relative;
+}
+.search-box input {
+  width: 100%; padding: 9px 12px 9px 34px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); outline: none; transition: .15s;
+}
+.search-box input:focus { border-color: var(--primary-600); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.search-box .search-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 14px; }
+.filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-select {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text); font-size: 13px; outline: none; min-width: 130px;
+}
+.filter-select:focus { border-color: var(--primary-600); }
+
+/* ---------- TABLE ---------- */
+.table-container {
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  overflow: hidden;
+}
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+thead th {
+  background: var(--surface-2); text-align: left; padding: 10px 14px;
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .4px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+  position: sticky; top: 0; z-index: 1;
+}
+tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #fafbfc; }
+
+.task-title { font-weight: 600; color: var(--text); display: block; max-width: 340px; white-space: normal; line-height: 1.4; }
+.task-meta { font-size: 11px; color: var(--text-light); margin-top: 2px; display: block; }
+.task-note-inline { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: block; }
+
+.role-pill {
+  display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .3px;
+  padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-right: 5px;
+  vertical-align: middle;
+}
+.role-ASM { background: #fef3c7; color: #92400e; }
+.role-QL { background: #dbeafe; color: #1e40af; }
+.role-NV { background: #dcfce7; color: #166534; }
+.role-BST { background: #fce7f3; color: #9d174d; }
+.role-NV_VX { background: #ede9fe; color: #6d28d9; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  white-space: nowrap;
+}
+.st-todo { background: #f1f5f9; color: #475569; }
+.st-doing { background: #dbeafe; color: #1e40af; }
+.st-done { background: #dcfce7; color: #166534; }
+.st-paused { background: #fef3c7; color: #92400e; }
+.st-overdue { background: #fee2e2; color: #991b1b; animation: pulse-danger 2s infinite; }
+.st-soon { background: #ffedd5; color: #c2410c; }
+@keyframes pulse-danger { 0%,100%{opacity:1} 50%{opacity:.65} }
+
+.deadline-cell { font-weight: 600; font-size: 13px; white-space: nowrap; }
+.deadline-cell small { display: block; font-weight: 400; font-size: 11px; color: var(--text-light); }
+
+.remaining-pill {
+  display: inline-block; padding: 4px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.rem-ok { background: #f0fdf4; color: #166534; }
+.rem-soon { background: #fffbeb; color: #92400e; }
+.rem-urgent { background: #fef2f2; color: #991b1b; }
+.rem-done { background: #f1f5f9; color: #64748b; }
+
+.priority-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+.pri-high { background: var(--danger); }
+.pri-medium { background: var(--warning); }
+.pri-low { background: var(--text-light); }
+
+.link-cell a {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; color: var(--primary-600);
+  text-decoration: none; padding: 3px 8px;
+  border: 1px solid var(--primary-100); background: #eff6ff; border-radius: 5px;
+  white-space: nowrap;
+}
+.link-cell a:hover { background: var(--primary-100); }
+.link-cell a.disabled { opacity: .35; pointer-events: none; border-style: dashed; background: transparent; color: var(--text-light); }
+
+.actions-cell { display: flex; gap: 4px; }
+.actions-cell .btn { padding: 5px 8px; font-size: 11px; }
+
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--text-muted);
+}
+.empty-state .empty-ico { font-size: 40px; margin-bottom: 12px; opacity: .5; }
+.empty-state h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.empty-state p { font-size: 13px; margin-bottom: 16px; }
+
+/* ---------- KANBAN ---------- */
+.kanban-board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
+.kanban-col {
+  flex: 1; min-width: 280px; max-width: 340px;
+  background: var(--surface-2); border-radius: var(--radius); padding: 12px;
+}
+.kanban-col-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 0 4px; }
+.kanban-col-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.kanban-col-count { background: var(--border); font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-left: auto; }
+.kanban-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; margin-bottom: 8px; box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: .15s;
+}
+.kanban-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kanban-card-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.kanban-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); }
+
+/* ---------- MODAL ---------- */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15,23,42,.5);
+  z-index: 1000; display: none; align-items: flex-start; justify-content: center;
+  padding: 40px 16px; overflow-y: auto;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 14px; width: 100%; max-width: 620px;
+  box-shadow: var(--shadow-lg); animation: slideUp .2s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-header h2 { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 22px; color: var(--text-muted); padding: 0 4px; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 20px 24px; max-height: 68vh; overflow-y: auto; }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  background: var(--surface-2); border-radius: 0 0 14px 14px;
+}
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+.form-label .req { color: var(--danger); }
+.form-control {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); outline: none; transition: .15s;
+}
+.form-control:focus { border-color: var(--primary-600); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+textarea.form-control { min-height: 64px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Multi-pick participants */
+.multi-pick {
+  max-height: 160px; overflow-y: auto; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px;
+}
+.people-group { margin-bottom: 8px; }
+.people-group:last-child { margin-bottom: 0; }
+.people-group-title {
+  font-size: 10px; font-weight: 800; color: var(--primary);
+  text-transform: uppercase; margin-bottom: 4px;
+  background: var(--primary-100); display: inline-block; padding: 1px 7px; border-radius: 4px;
+}
+.people-option {
+  display: flex; align-items: center; gap: 6px; padding: 4px 6px;
+  font-size: 13px; border-radius: 4px; cursor: pointer;
+}
+.people-option:hover { background: var(--surface-2); }
+.people-option input { accent-color: var(--primary); }
+
+/* Quick deadline */
+.quick-deadline-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.quick-deadline-label { font-size: 11px; font-weight: 700; color: var(--text-muted); min-width: 60px; }
+.quick-deadline-btn {
+  padding: 5px 10px; border: 1px solid var(--border); background: var(--surface);
+  border-radius: 5px; font-size: 12px; font-weight: 600; color: var(--primary);
+  transition: .1s;
+}
+.quick-deadline-btn:hover { background: #eff6ff; border-color: var(--primary-600); }
+.quick-deadline-btn.tomorrow { background: #fffbeb; border-color: #fcd34d; color: var(--warning); }
+.quick-deadline-btn.tomorrow:hover { background: #fef3c7; }
+.deadline-hint { font-size: 11px; margin-top: 4px; color: var(--text-muted); }
+.deadline-hint.warn { color: var(--danger); font-weight: 600; }
+.deadline-hint.ok { color: var(--success); }
+
+/* Ping preview */
+.ping-preview {
+  background: #0f172a; color: #e2e8f0; padding: 18px; border-radius: 10px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 13px;
+  line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+  max-height: 55vh; overflow: auto; border: 2px solid var(--primary-600);
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #0f172a; color: #fff; padding: 11px 20px; border-radius: 8px;
+  font-size: 13px; box-shadow: var(--shadow-lg); z-index: 11000;
+  opacity: 0; pointer-events: none; transition: .25s; max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; }
+.toast.ok { background: var(--success); }
+.toast.bad { background: var(--danger); }
+.toast.info { background: var(--primary-600); }
+
+/* Loading */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,.45);
+  display: none; align-items: center; justify-content: center; z-index: 9000;
+  flex-direction: column; gap: 14px; color: #fff; font-size: 14px;
+}
+.loading-overlay.show { display: flex; }
+.spinner {
+  width: 40px; height: 40px; border: 4px solid rgba(255,255,255,.3);
+  border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { transform: translateX(-100%); width: 240px; }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+  .main { margin-left: 0; }
+  .menu-toggle { display: inline-block; }
+}
+@media (max-width: 640px) {
+  .content { padding: 14px; }
+  .app-header { padding: 0 14px; }
+  .form-row { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .search-box { max-width: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">ASM</div>
+      <div class="name">Ping Push<small>Portal quản lý công việc</small></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Tổng quan</div>
+        <button class="nav-item active" data-view="all">
+          <span class="ico">📋</span> Tất cả công việc
+          <span class="count" id="navCountAll">0</span>
+        </button>
+        <button class="nav-item" data-view="overdue">
+          <span class="ico">🔴</span> Quá hạn
+          <span class="count" id="navCountOverdue">0</span>
+        </button>
+        <button class="nav-item" data-view="soon">
+          <span class="ico">🟡</span> Sắp / Cận hạn
+          <span class="count" id="navCountSoon">0</span>
+        </button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Theo trạng thái</div>
+        <button class="nav-item" data-view="todo"><span class="ico">📥</span> Chờ nhận <span class="count" id="navCountTodo">0</span></button>
+        <button class="nav-item" data-view="doing"><span class="ico">🔄</span> Đang làm <span class="count" id="navCountDoing">0</span></button>
+        <button class="nav-item" data-view="done"><span class="ico">✅</span> Hoàn thành <span class="count" id="navCountDone">0</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Theo vai trò</div>
+        <button class="nav-item" data-role="ASM"><span class="ico">🎖</span> ASM</button>
+        <button class="nav-item" data-role="QL"><span class="ico">🎖</span> QL</button>
+        <button class="nav-item" data-role="NV"><span class="ico">🎖</span> NV</button>
+        <button class="nav-item" data-role="BST"><span class="ico">🎖</span> BST</button>
+        <button class="nav-item" data-role="NV VX"><span class="ico">🎖</span> NV VX</button>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">Đang tải…</div>
+          <div class="user-role" id="userRole">Người giao việc</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="app-header">
+      <div class="header-left">
+        <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <span class="page-title" id="pageTitle">Tất cả công việc</span>
+          <span class="page-sub" id="pageSub"></span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="APP.reload()" title="Tải lại dữ liệu">🔄</button>
+        <button class="btn btn-outline" onclick="APP.openPeople()">👥 Nhân sự</button>
+        <button class="btn btn-warn" onclick="APP.bulkPing()">🔔 Ping hàng loạt</button>
+        <button class="btn btn-primary" onclick="APP.openCreate()">➕ Giao việc</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="storage-note" id="storageNote">Dữ liệu được lưu trên trình duyệt này. Hãy xuất bản sao định kỳ; các thiết bị khác chưa tự đồng bộ.</div>
+      <!-- KPI -->
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- View tabs -->
+      <div class="view-tabs">
+        <button class="view-tab active" data-render="table">📊 Bảng</button>
+        <button class="view-tab" data-render="kanban">📋 Kanban</button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-ico">🔎</span>
+          <input type="text" id="searchInput" placeholder="Tìm theo tên, người TH, ghi chú…" autocomplete="off">
+        </div>
+        <div class="filter-group">
+          <select class="filter-select" id="filterPriority">
+            <option value="">Mọi ưu tiên</option>
+            <option value="Cao">🔴 Cao</option>
+            <option value="Trung bình">🟡 Trung bình</option>
+            <option value="Thấp">⚪ Thấp</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table view -->
+      <div id="viewTable" class="table-container">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:90px">Mã</th>
+                <th>Công việc</th>
+                <th style="width:90px">Link</th>
+                <th style="width:170px">Người TH</th>
+                <th style="width:200px">Người tham gia</th>
+                <th style="width:150px">Deadline</th>
+                <th style="width:130px">Còn lại</th>
+                <th style="width:100px">Ưu tiên</th>
+                <th style="width:140px">Trạng thái</th>
+                <th style="width:180px">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Kanban view -->
+      <div id="viewKanban" class="kanban-board" style="display:none;"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: NHÂN SỰ & DỮ LIỆU ==================== -->
+<div class="modal-backdrop" id="peopleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nhân sự & dữ liệu</h2>
+      <button class="modal-close" onclick="APP.closePeople()" aria-label="Đóng">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Thêm người thực hiện theo vai trò để giao việc. Dữ liệu lưu riêng trong trình duyệt này.</p>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label" for="personRole">Vai trò</label><select class="form-control" id="personRole"><option>ASM</option><option>QL</option><option>NV</option><option>BST</option><option>NV VX</option></select></div>
+        <div class="form-group"><label class="form-label" for="personName">Họ tên</label><input class="form-control" id="personName" placeholder="Nhập tên nhân sự"></div>
+      </div>
+      <button class="btn btn-primary" onclick="APP.addPerson()">Thêm nhân sự</button>
+      <div class="people-list" id="peopleList"></div>
+      <hr style="border:0;border-top:1px solid var(--border);margin:22px 0 16px">
+      <div class="data-actions">
+        <button class="btn btn-outline" onclick="APP.exportData()">⬇ Xuất bản sao JSON</button>
+        <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">⬆ Nhập bản sao JSON</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:10px">Nhập sẽ gộp công việc và nhân sự theo mã, không xóa dữ liệu hiện có.</p>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="APP.closePeople()">Đóng</button></div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: TẠO / SỬA ==================== -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="editModalTitle">Giao việc mới</h2>
+      <button class="modal-close" onclick="APP.closeEdit()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label class="form-label">Tên công việc <span class="req">*</span></label>
+        <input type="text" class="form-control" id="fName" placeholder="VD: Gửi báo cáo doanh số tuần 45">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link thực hiện</label>
+        <input type="url" class="form-control" id="fLink" placeholder="https://…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Người thực hiện <span class="req">*</span></label>
+        <select class="form-control" id="fAssignee"><option value="">-- Chọn --</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Người tham gia (theo dõi)</label>
+        <div class="multi-pick" id="fParticipantsBox"></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" id="fParticipantsSummary">Chưa chọn</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deadline <span class="req">*</span></label>
+        <div id="quickDeadlines"></div>
+        <input type="datetime-local" class="form-control" id="fDeadline" style="margin-top:6px;">
+        <div class="deadline-hint" id="deadlineHint"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Ưu tiên</label>
+          <select class="form-control" id="fPriority">
+            <option value="Trung bình">🟡 Trung bình</option>
+            <option value="Cao">🔴 Cao</option>
+            <option value="Thấp">⚪ Thấp</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Trạng thái</label>
+          <select class="form-control" id="fStatus">
+            <option value="Chờ nhận">📥 Chờ nhận</option>
+            <option value="Đang làm">🔄 Đang làm</option>
+            <option value="Hoàn thành">✅ Hoàn thành</option>
+            <option value="Tạm dừng">⏸ Tạm dừng</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ghi chú</label>
+        <textarea class="form-control" id="fNote" placeholder="Ghi chú thêm…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="APP.closeEdit()">Hủy</button>
+      <button class="btn btn-primary" onclick="APP.saveTask()">💾 Lưu công việc</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: PING ==================== -->
+<div class="modal-backdrop" id="pingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🔔 Nội dung Ping Push</h2>
+      <button class="modal-close" onclick="APP.closePing()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Copy nội dung bên dưới để gửi qua Zalo / Telegram / Email:</p>
+      <div class="ping-preview" id="pingPreview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="APP.closePing()">Đóng</button>
+      <button class="btn btn-primary" onclick="APP.copyPing()">📋 Copy nội dung</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div id="loadingText">Đang tải dữ liệu…</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   STATE & CONSTANTS
+   ========================================================= */
+const LS_TASKS = 'asm_pp_tasks_v3';
+const LS_PEOPLE = 'asm_pp_people_v3';
+const HAS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+
+const ROLES = ['ASM', 'QL', 'NV', 'BST', 'NV VX'];
+const ROLE_LABEL = { 'ASM': 'ASM', 'QL': 'QL', 'NV': 'NV', 'BST': 'BST', 'NV VX': 'NV VX' };
+const STATUS_MANUAL = ['Chờ nhận', 'Đang làm', 'Hoàn thành', 'Tạm dừng'];
+
+const S = {
+  mode: HAS_GAS ? 'sheet' : 'browser',
+  tasks: [],
+  people: [],
+  poster: '',
+  currentView: 'all',
+  currentRole: '',
+  currentRender: 'table',
+  editingId: null,
+  pingTargetId: null
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function toast(msg, type){
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (type || '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+function showLoading(t){ $('loadingText').textContent = t || 'Đang xử lý…'; $('loadingOverlay').classList.add('show'); }
+function hideLoading(){ $('loadingOverlay').classList.remove('show'); }
+
+/* =========================================================
+   DATE / TIME UTILS
+   ========================================================= */
+const pad = n => String(n).padStart(2, '0');
+
+function toLocalInput(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function fmtDateTime(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  if(isNaN(d)) return '—';
+  return d.toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function fmtDuration(ms){
+  const s = Math.floor(Math.abs(ms)/1000);
+  const d = Math.floor(s/86400);
+  const h = Math.floor((s%86400)/3600);
+  const m = Math.floor((s%3600)/60);
+  if(d > 0) return d + 'd ' + h + 'h';
+  if(h > 0) return h + 'h ' + m + 'p';
+  return Math.max(0, m) + 'p';
+}
+
+/* =========================================================
+   TASK LOGIC – TRẠNG THÁI THÔNG MINH
+   ========================================================= */
+
+/**
+ * Trả về thông tin trạng thái hiển thị (kết hợp manual + auto theo deadline).
+ * rank: càng nhỏ càng ưu tiên (dùng để sắp xếp)
+ */
+function displayStatus(task){
+  if(task.status === 'Hoàn thành') return { label: '✅ Hoàn thành', cls: 'st-done', rank: 8 };
+  if(task.status === 'Tạm dừng')   return { label: '⏸ Tạm dừng',   cls: 'st-paused', rank: 7 };
+  if(!task.deadline) return { label: '📥 Chờ nhận', cls: 'st-todo', rank: 4 };
+
+  const diff = new Date(task.deadline).getTime() - Date.now();
+  if(diff < 0)                  return { label: '🔴 Quá hạn', cls: 'st-overdue', rank: 0 };
+  if(diff < 6 * 3600 * 1000)    return { label: '🟡 Sắp hạn', cls: 'st-soon',   rank: 1 };
+  if(diff < 24 * 3600 * 1000)   return { label: '🟠 Cận hạn', cls: 'st-soon',   rank: 2 };
+  if(task.status === 'Đang làm') return { label: '🔄 Đang làm', cls: 'st-doing',  rank: 3 };
+  return { label: '📥 Chờ nhận', cls: 'st-todo', rank: 4 };
+}
+
+/** Thông tin "còn lại" (dùng riêng cột Còn lại) */
+function timeInfo(task){
+  if(!task.deadline) return { label: '—', cls: 'rem-done', rank: 9 };
+  if(task.status === 'Hoàn thành') return { label: '✓ Done', cls: 'rem-done', rank: 8 };
+  const diff = new Date(task.deadline).getTime() - Date.now();
+  if(diff < 0)                return { label: '⚠ Quá hạn ' + fmtDuration(diff), cls: 'rem-urgent', rank: 0 };
+  if(diff < 24*3600*1000)     return { label: '🔥 Còn ' + fmtDuration(diff), cls: 'rem-urgent', rank: 1 };
+  if(diff < 3*24*3600*1000)   return { label: '⏰ Còn ' + fmtDuration(diff), cls: 'rem-soon', rank: 2 };
+  return { label: 'Còn ' + fmtDuration(diff), cls: 'rem-ok', rank: 3 };
+}
+
+function priorityClass(p){
+  return { 'Cao':'pri-high', 'Trung bình':'pri-medium', 'Thấp':'pri-low' }[p] || 'pri-medium';
+}
+function rolePill(role){
+  if(!role) return '';
+  const cls = 'role-' + role.replace(/\s+/g, '_');
+  return `<span class="role-pill ${cls}">${esc(role)}</span>`;
+}
+function parseParticipants(str){
+  if(!str) return [];
+  return String(str).split(',').map(s => s.trim()).filter(Boolean);
+}
+function formatParticipants(str){
+  const list = parseParticipants(str);
+  if(!list.length) return '<span style="color:var(--text-light)">—</span>';
+  return list.map(item => {
+    const p = item.split('::');
+    if(p.length > 1) return rolePill(p[0]) + `<span style="font-size:12px">${esc(p[1])}</span>`;
+    return `<span style="font-size:12px">${esc(item)}</span>`;
+  }).join('<br>');
+}
+function formatParticipantsPlain(str){
+  const list = parseParticipants(str);
+  if(!list.length) return '—';
+  return list.map(item => {
+    const p = item.split('::');
+    if(p.length > 1) return `[${p[0]}] ${p[1]}`;
+    return item;
+  }).join(', ');
+}
+
+/* =========================================================
+   DATA LAYER
+   ========================================================= */
+const Data = {
+  loadAll(cb){
+    if(S.mode === 'sheet'){
+      google.script.run.withSuccessHandler(people => {
+        S.people = people || [];
+        google.script.run.withSuccessHandler(tasks => cb(tasks || []))
+          .withFailureHandler(e => { toast('❌ ' + e.message, 'bad'); cb([]); })
+          .getTasks();
+      }).withFailureHandler(e => { toast('❌ ' + e.message, 'bad'); cb([]); })
+        .getPeople();
+    } else {
+      let people = [];
+      try { people = JSON.parse(localStorage.getItem(LS_PEOPLE) || '[]'); } catch(e){}
+      S.people = people;
+
+      let tasks = [];
+      try { tasks = JSON.parse(localStorage.getItem(LS_TASKS) || '[]'); } catch(e){}
+      cb(tasks);
+    }
+  },
+  save(task, cb){
+    if(S.mode === 'sheet'){
+      if(task.id){
+        google.script.run.withSuccessHandler(cb).withFailureHandler(e => cb({ok:false,error:e.message}))
+          .updateTask(task.id, task);
+      } else {
+        google.script.run.withSuccessHandler(cb).withFailureHandler(e => cb({ok:false,error:e.message}))
+          .addTask(task);
+      }
+    } else {
+      if(task.id){
+        const i = S.tasks.findIndex(t => t.id === task.id);
+        if(i >= 0) S.tasks[i] = Object.assign({}, S.tasks[i], task, { updatedAt: new Date().toISOString() });
+      } else {
+        task.id = 'T' + Date.now().toString(36).toUpperCase();
+        task.createdAt = new Date().toISOString();
+        task.updatedAt = task.createdAt;
+        task.pingCount = 0;
+        task.poster = S.poster || 'Owner';
+        S.tasks.push(task);
+      }
+      localStorage.setItem(LS_TASKS, JSON.stringify(S.tasks));
+      cb({ ok: true, id: task.id });
+    }
+  },
+  remove(id, cb){
+    if(S.mode === 'sheet'){
+      google.script.run.withSuccessHandler(cb).withFailureHandler(e => cb({ok:false,error:e.message}))
+        .deleteTask(id);
+    } else {
+      S.tasks = S.tasks.filter(t => t.id !== id);
+      localStorage.setItem(LS_TASKS, JSON.stringify(S.tasks));
+      cb({ ok: true });
+    }
+  },
+  ping(id, cb){
+    if(S.mode === 'sheet'){
+      google.script.run.withSuccessHandler(cb).withFailureHandler(e => cb({ok:false,error:e.message}))
+        .pingTask(id);
+    } else {
+      const t = S.tasks.find(x => x.id === id);
+      if(t){ t.pingCount = (t.pingCount || 0) + 1; t.updatedAt = new Date().toISOString(); }
+      localStorage.setItem(LS_TASKS, JSON.stringify(S.tasks));
+      cb({ ok: true, count: t ? t.pingCount : 0 });
+    }
+  }
+};
+
+/* =========================================================
+   RENDER – LỌC & SẮP XẾP
+   ========================================================= */
+function getFilteredTasks(){
+  const q = ($('searchInput').value || '').toLowerCase().trim();
+  const fp = $('filterPriority').value;
+
+  let list = S.tasks.slice();
+
+  // Lọc theo view hiện tại (sidebar)
+  const view = S.currentView;
+  if(view === 'overdue') list = list.filter(t => displayStatus(t).cls === 'st-overdue');
+  else if(view === 'soon') list = list.filter(t => { const c = displayStatus(t).cls; return c === 'st-soon'; });
+  else if(view === 'todo') list = list.filter(t => t.status === 'Chờ nhận' && displayStatus(t).rank > 1);
+  else if(view === 'doing') list = list.filter(t => t.status === 'Đang làm' && displayStatus(t).rank > 1);
+  else if(view === 'done') list = list.filter(t => t.status === 'Hoàn thành');
+
+  // Lọc theo role (sidebar)
+  if(S.currentRole) list = list.filter(t => t.assigneeRole === S.currentRole);
+
+  // Lọc theo search
+  if(q){
+    list = list.filter(t => (t.name + ' ' + t.assignee + ' ' + t.participants + ' ' + t.note).toLowerCase().includes(q));
+  }
+
+  // Lọc theo priority
+  if(fp) list = list.filter(t => t.priority === fp);
+
+  // Sắp xếp: quá hạn → sắp hạn → cận hạn → đang làm → chờ → done
+  list.sort((a,b) => displayStatus(a).rank - displayStatus(b).rank);
+  return list;
+}
+
+/* =========================================================
+   RENDER – KPI
+   ========================================================= */
+function renderKPI(){
+  const total = S.tasks.length;
+  const done = S.tasks.filter(t => t.status === 'Hoàn thành').length;
+  const doing = S.tasks.filter(t => t.status === 'Đang làm' && displayStatus(t).rank > 1).length;
+  const todo = S.tasks.filter(t => t.status === 'Chờ nhận' && displayStatus(t).rank > 1).length;
+  const overdue = S.tasks.filter(t => displayStatus(t).cls === 'st-overdue').length;
+  const soon = S.tasks.filter(t => { const c = displayStatus(t).cls; return c === 'st-soon'; }).length;
+
+  $('kpiGrid').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Tổng công việc</div><div class="kpi-value">${total}</div></div>
+    <div class="kpi-card"><div class="kpi-label">📥 Chờ nhận</div><div class="kpi-value">${todo}</div></div>
+    <div class="kpi-card"><div class="kpi-label">🔄 Đang làm</div><div class="kpi-value">${doing}</div></div>
+    <div class="kpi-card kpi-ok"><div class="kpi-label">✅ Hoàn thành</div><div class="kpi-value">${done}</div></div>
+    <div class="kpi-card kpi-danger"><div class="kpi-label">🔴 Quá hạn</div><div class="kpi-value">${overdue}</div></div>
+    <div class="kpi-card kpi-warn"><div class="kpi-label">🟡 Sắp hạn</div><div class="kpi-value">${soon}</div></div>
+  `;
+
+  // Cập nhật count trên sidebar
+  $('navCountAll').textContent = total;
+  $('navCountOverdue').textContent = overdue;
+  $('navCountSoon').textContent = soon;
+  $('navCountTodo').textContent = todo;
+  $('navCountDoing').textContent = doing;
+  $('navCountDone').textContent = done;
+}
+
+/* =========================================================
+   RENDER – TABLE
+   ========================================================= */
+function renderTable(){
+  const list = getFilteredTasks();
+  const tbody = $('tableBody');
+
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="10">
+      <div class="empty-state">
+        <div class="empty-ico">📭</div>
+        <h3>Không có công việc nào</h3>
+        <p>Thử đổi bộ lọc hoặc giao việc mới.</p>
+        <button class="btn btn-primary" onclick="APP.openCreate()">➕ Giao việc mới</button>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(t => {
+    const ti = timeInfo(t);
+    const ds = displayStatus(t);
+    const linkHtml = t.link && /^https?:\/\//i.test(t.link)
+      ? `<a href="${esc(t.link)}" target="_blank" rel="noopener">🔗 Mở</a>`
+      : `<a class="disabled">—</a>`;
+    const pingNote = t.pingCount ? `<div style="font-size:10px;color:var(--text-light);margin-top:3px;">🔔 Đã ping ${t.pingCount} lần</div>` : '';
+    const posterLine = t.poster ? `<span class="task-meta">👤 ${esc(t.poster)}</span>` : '';
+
+    return `<tr>
+      <td><span style="font-size:11px;color:var(--text-muted);font-family:monospace;">${esc(t.id)}</span>${posterLine}</td>
+      <td>
+        <span class="task-title">${esc(t.name)}</span>
+        ${t.note ? `<span class="task-note-inline">📝 ${esc(t.note)}</span>` : ''}
+      </td>
+      <td class="link-cell">${linkHtml}</td>
+      <td><div>${rolePill(t.assigneeRole)}<span style="font-weight:600;font-size:13px;">${esc(t.assignee || '—')}</span></div></td>
+      <td><div style="font-size:12px;line-height:1.6;">${formatParticipants(t.participants)}</div></td>
+      <td><div class="deadline-cell">${fmtDateTime(t.deadline)}</div></td>
+      <td><span class="remaining-pill ${ti.cls}">${ti.label}</span>${pingNote}</td>
+      <td><span class="priority-dot ${priorityClass(t.priority)}"></span><span style="font-size:12px;font-weight:600;">${esc(t.priority)}</span></td>
+      <td><span class="status-pill ${ds.cls}">${ds.label}</span></td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-warn btn-sm" onclick="APP.ping('${t.id}')" title="Ping">🔔</button>
+          <button class="btn btn-outline btn-sm" onclick="APP.openEdit('${t.id}')" title="Sửa">✏️</button>
+          <button class="btn btn-outline btn-sm" onclick="APP.remove('${t.id}')" title="Xóa">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* =========================================================
+   RENDER – KANBAN
+   ========================================================= */
+function renderKanban(){
+  const list = getFilteredTasks();
+  const board = $('viewKanban');
+
+  // Nhóm theo trạng thái hiển thị (auto)
+  const groups = {
+    overdue: { title: '🔴 Quá hạn', items: [] },
+    soon:    { title: '🟡 Sắp / Cận hạn', items: [] },
+    doing:   { title: '🔄 Đang làm', items: [] },
+    todo:    { title: '📥 Chờ nhận', items: [] },
+    done:    { title: '✅ Hoàn thành', items: [] }
+  };
+
+  list.forEach(t => {
+    const ds = displayStatus(t);
+    if(ds.cls === 'st-overdue') groups.overdue.items.push(t);
+    else if(ds.cls === 'st-soon') groups.soon.items.push(t);
+    else if(ds.cls === 'st-done') groups.done.items.push(t);
+    else if(ds.cls === 'st-doing') groups.doing.items.push(t);
+    else groups.todo.items.push(t);
+  });
+
+  board.innerHTML = Object.values(groups).map(g => `
+    <div class="kanban-col">
+      <div class="kanban-col-head">
+        <span class="kanban-col-title">${g.title}</span>
+        <span class="kanban-col-count">${g.items.length}</span>
+      </div>
+      ${g.items.map(t => {
+        const ti = timeInfo(t);
+        return `<div class="kanban-card" onclick="APP.openEdit('${t.id}')">
+          <div class="kanban-card-title">${esc(t.name)}</div>
+          <div class="kanban-card-meta">
+            ${rolePill(t.assigneeRole)} ${esc(t.assignee || '—')}
+            <span style="margin-left:auto;font-size:10px;">${ti.label}</span>
+          </div>
+          ${t.deadline ? `<div style="font-size:10px;color:var(--text-light);margin-top:4px;">⏰ ${fmtDateTime(t.deadline)}</div>` : ''}
+        </div>`;
+      }).join('') || '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:12px;">Trống</div>'}
+    </div>
+  `).join('');
+}
+
+/* =========================================================
+   RENDER – TỔNG
+   ========================================================= */
+function renderAll(){
+  renderKPI();
+  if(S.currentRender === 'kanban') renderKanban();
+  else renderTable();
+
+  // Cập nhật tiêu đề trang
+  const titles = { all:'Tất cả công việc', overdue:'Quá hạn', soon:'Sắp / Cận hạn', todo:'Chờ nhận', doing:'Đang làm', done:'Hoàn thành' };
+  $('pageTitle').textContent = titles[S.currentView] || 'Tất cả công việc';
+  $('pageSub').textContent = S.currentRole ? '• Vai trò: ' + S.currentRole : '';
+
+  // Active nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    if(n.dataset.view === S.currentView && !n.dataset.role) n.classList.add('active');
+    if(n.dataset.role === S.currentRole) n.classList.add('active');
+  });
+
+  // Active tab
+  document.querySelectorAll('.view-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.render === S.currentRender);
+  });
+}
+
+/* =========================================================
+   FORM BUILDERS
+   ========================================================= */
+function buildPeopleMap(){
+  const map = new Map();
+  S.people.forEach(p => {
+    if(!map.has(p.role)) map.set(p.role, []);
+    map.get(p.role).push(p.name);
+  });
+  return map;
+}
+
+function buildAssigneeSelect(selectedValue){
+  const sel = $('fAssignee');
+  sel.innerHTML = '<option value="">-- Chọn người thực hiện --</option>';
+  const map = buildPeopleMap();
+  ROLES.forEach(role => {
+    const names = map.get(role);
+    if(!names || !names.length) return;
+    const group = document.createElement('optgroup');
+    group.label = '🎖 ' + ROLE_LABEL[role];
+    names.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = role + '::' + name;
+      opt.textContent = name;
+      if(selectedValue === role + '::' + name) opt.selected = true;
+      group.appendChild(opt);
+    });
+    sel.appendChild(group);
+  });
+}
+
+function buildParticipantsBox(selectedList){
+  const box = $('fParticipantsBox');
+  box.innerHTML = '';
+  const map = buildPeopleMap();
+  const selSet = new Set(selectedList || []);
+  ROLES.forEach(role => {
+    const names = map.get(role);
+    if(!names || !names.length) return;
+    const grp = document.createElement('div');
+    grp.className = 'people-group';
+    grp.innerHTML = `<div class="people-group-title">${ROLE_LABEL[role]}</div>`;
+    names.forEach(name => {
+      const label = document.createElement('label');
+      label.className = 'people-option';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = role + '::' + name;
+      if(selSet.has(role + '::' + name)) cb.checked = true;
+      cb.addEventListener('change', updateParticipantsSummary);
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(name));
+      grp.appendChild(label);
+    });
+    box.appendChild(grp);
+  });
+  updateParticipantsSummary();
+}
+
+function getSelectedParticipants(){
+  const box = $('fParticipantsBox');
+  if(!box) return [];
+  return Array.from(box.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+}
+
+function updateParticipantsSummary(){
+  const list = getSelectedParticipants();
+  const el = $('fParticipantsSummary');
+  if(!list.length){ el.textContent = 'Chưa chọn người tham gia'; return; }
+  el.innerHTML = `✅ Đã chọn <b>${list.length}</b> người: ` + list.map(v => {
+    const p = v.split('::');
+    return rolePill(p[0]) + esc(p[1] || '');
+  }).join(', ');
+}
+
+function buildQuickDeadlines(){
+  const box = $('quickDeadlines');
+  box.innerHTML = '';
+
+  const todayRow = document.createElement('div');
+  todayRow.className = 'quick-deadline-row';
+  todayRow.innerHTML = '<span class="quick-deadline-label">📅 Hôm nay</span>';
+  [10, 12, 15, 18, 20, 23].forEach(h => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quick-deadline-btn';
+    btn.textContent = h + 'h' + (h === 23 ? '59' : '');
+    btn.onclick = () => APP.setQuickDeadline(h, h === 23 ? 59 : 0, false);
+    todayRow.appendChild(btn);
+  });
+  box.appendChild(todayRow);
+
+  const tomorrowRow = document.createElement('div');
+  tomorrowRow.className = 'quick-deadline-row';
+  tomorrowRow.innerHTML = '<span class="quick-deadline-label">📅 Ngày mai</span>';
+  [10, 12, 15, 18, 20, 23].forEach(h => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quick-deadline-btn tomorrow';
+    btn.textContent = h + 'h' + (h === 23 ? '59' : '');
+    btn.onclick = () => APP.setQuickDeadline(h, h === 23 ? 59 : 0, true);
+    tomorrowRow.appendChild(btn);
+  });
+  box.appendChild(tomorrowRow);
+}
+
+function updateDeadlineHint(){
+  const val = $('fDeadline').value;
+  const hint = $('deadlineHint');
+  if(!val){ hint.textContent = ''; hint.className = 'deadline-hint'; return; }
+  const d = new Date(val);
+  if(isNaN(d)){ hint.textContent = ''; hint.className = 'deadline-hint'; return; }
+  const diff = d.getTime() - Date.now();
+  if(diff < 0){
+    hint.textContent = '⚠ Deadline đã ở quá khứ (' + fmtDuration(diff) + ' trước)';
+    hint.className = 'deadline-hint warn';
+  } else {
+    hint.textContent = '⏳ Còn ' + fmtDuration(diff) + ' — ' + d.toLocaleString('vi-VN');
+    hint.className = 'deadline-hint ok';
+  }
+}
+
+/* =========================================================
+   APP ACTIONS
+   ========================================================= */
+const APP = {
+  reload(){ showLoading('Đang tải…'); Data.loadAll(tasks => { S.tasks = tasks; hideLoading(); renderAll(); }); },
+
+  openPeople(){
+    if(S.mode === 'sheet'){ toast('Nhân sự được quản lý trong sheet People', 'info'); return; }
+    APP.renderPeople();
+    $('peopleModal').classList.add('open');
+  },
+  closePeople(){ $('peopleModal').classList.remove('open'); },
+  renderPeople(){
+    const box = $('peopleList');
+    if(!S.people.length){ box.innerHTML = '<div class="empty-state" style="padding:24px"><p>Chưa có nhân sự. Thêm người đầu tiên để giao việc.</p></div>'; return; }
+    box.innerHTML = S.people.map((p, i) => `<div class="person-row"><div><strong>${esc(p.name)}</strong> <small>· ${esc(p.role)}</small></div><button class="btn btn-outline btn-sm" onclick="APP.removePerson(${i})" aria-label="Xóa ${esc(p.name)}">Xóa</button></div>`).join('');
+  },
+  addPerson(){
+    const role = $('personRole').value;
+    const name = $('personName').value.trim();
+    if(!name){ toast('Nhập họ tên nhân sự', 'bad'); return; }
+    if(S.people.some(p => p.role === role && p.name.toLocaleLowerCase('vi') === name.toLocaleLowerCase('vi'))){ toast('Nhân sự đã có trong vai trò này', 'bad'); return; }
+    S.people.push({role, name});
+    localStorage.setItem(LS_PEOPLE, JSON.stringify(S.people));
+    $('personName').value = '';
+    APP.renderPeople();
+    toast('Đã thêm nhân sự', 'ok');
+  },
+  removePerson(i){
+    const p = S.people[i];
+    if(!p || !confirm('Xóa ' + p.name + ' khỏi danh sách nhân sự? Công việc đã giao vẫn được giữ.')) return;
+    S.people.splice(i, 1);
+    localStorage.setItem(LS_PEOPLE, JSON.stringify(S.people));
+    APP.renderPeople();
+  },
+  exportData(){
+    const payload = {format:'asm-ping-push-v3', exportedAt:new Date().toISOString(), people:S.people, tasks:S.tasks};
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'asm-ping-push-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+  async importData(file){
+    if(!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if(data.format !== 'asm-ping-push-v3' || !Array.isArray(data.people) || !Array.isArray(data.tasks)) throw new Error('File không đúng định dạng bản sao ASM Ping Push');
+      const people = data.people.filter(p => p && ROLES.includes(p.role) && typeof p.name === 'string' && p.name.trim());
+      const tasks = data.tasks.filter(t => t && typeof t.id === 'string' && typeof t.name === 'string' && t.name.trim());
+      const peopleMap = new Map(S.people.map(p => [p.role + '::' + p.name, p]));
+      people.forEach(p => peopleMap.set(p.role + '::' + p.name, {role:p.role, name:p.name.trim()}));
+      const taskMap = new Map(S.tasks.map(t => [t.id, t]));
+      tasks.forEach(t => { if(!taskMap.has(t.id)) taskMap.set(t.id, t); });
+      S.people = [...peopleMap.values()]; S.tasks = [...taskMap.values()];
+      localStorage.setItem(LS_PEOPLE, JSON.stringify(S.people));
+      localStorage.setItem(LS_TASKS, JSON.stringify(S.tasks));
+      APP.renderPeople(); renderAll();
+      toast('Đã nhập ' + tasks.length + ' công việc và ' + people.length + ' nhân sự', 'ok');
+    } catch(e){ toast(e.message || 'Không đọc được file', 'bad'); }
+    $('importFile').value = '';
+  },
+
+  openCreate(){
+    if(!S.people.length){ APP.openPeople(); toast('Thêm nhân sự trước khi giao việc', 'info'); return; }
+    S.editingId = null;
+    $('editModalTitle').textContent = 'Giao việc mới';
+    $('editId').value = '';
+    $('fName').value = '';
+    $('fLink').value = '';
+    $('fAssignee').value = '';
+    $('fParticipantsBox').innerHTML = '';
+    $('fParticipantsSummary').textContent = 'Chưa chọn';
+    $('fDeadline').value = '';
+    $('fPriority').value = 'Trung bình';
+    $('fStatus').value = 'Chờ nhận';
+    $('fNote').value = '';
+    buildAssigneeSelect('');
+    buildParticipantsBox([]);
+    buildQuickDeadlines();
+    updateDeadlineHint();
+    $('editModal').classList.add('open');
+    setTimeout(() => $('fName').focus(), 100);
+  },
+
+  openEdit(id){
+    const t = S.tasks.find(x => x.id === id);
+    if(!t) return;
+    S.editingId = id;
+    $('editModalTitle').textContent = 'Sửa công việc';
+    $('editId').value = id;
+    $('fName').value = t.name || '';
+    $('fLink').value = t.link || '';
+    $('fPriority').value = t.priority || 'Trung bình';
+    $('fStatus').value = t.status || 'Chờ nhận';
+    $('fNote').value = t.note || '';
+    $('fDeadline').value = toLocalInput(t.deadline);
+    buildAssigneeSelect(t.assigneeRole && t.assignee ? t.assigneeRole + '::' + t.assignee : '');
+    buildParticipantsBox(parseParticipants(t.participants));
+    buildQuickDeadlines();
+    updateDeadlineHint();
+    $('editModal').classList.add('open');
+  },
+
+  closeEdit(){ $('editModal').classList.remove('open'); },
+
+  setQuickDeadline(hour, min, tomorrow){
+    const d = new Date();
+    if(tomorrow) d.setDate(d.getDate() + 1);
+    d.setHours(hour, min, 0, 0);
+    $('fDeadline').value = toLocalInput(d.toISOString());
+    updateDeadlineHint();
+  },
+
+  saveTask(){
+    const name = $('fName').value.trim();
+    const assigneeValue = $('fAssignee').value;
+    const deadline = $('fDeadline').value;
+    if(!name){ toast('⚠ Vui lòng nhập tên công việc', 'bad'); return; }
+    if(!assigneeValue){ toast('⚠ Vui lòng chọn người thực hiện', 'bad'); return; }
+    if(!deadline){ toast('⚠ Vui lòng chọn deadline', 'bad'); return; }
+    const link = $('fLink').value.trim();
+    if(link && !/^https?:\/\//i.test(link)){ toast('Link cần bắt đầu bằng http:// hoặc https://', 'bad'); return; }
+
+    const parts = assigneeValue.split('::');
+    const task = {
+      name,
+      link,
+      assignee: parts[1] || '',
+      assigneeRole: parts[0] || '',
+      participants: getSelectedParticipants().join(', '),
+      deadline: new Date(deadline).toISOString(),
+      priority: $('fPriority').value,
+      status: $('fStatus').value,
+      note: $('fNote').value.trim()
+    };
+    if(S.editingId) task.id = S.editingId;
+
+    showLoading('Đang lưu…');
+    Data.save(task, r => {
+      hideLoading();
+      if(r && r.ok){ toast('✅ Đã lưu công việc', 'ok'); APP.closeEdit(); APP.reload(); }
+      else toast('❌ ' + (r && r.error || 'Lỗi'), 'bad');
+    });
+  },
+
+  remove(id){
+    if(!confirm('Xóa công việc này?')) return;
+    showLoading('Đang xóa…');
+    Data.remove(id, r => {
+      hideLoading();
+      if(r && r.ok){ toast('🗑 Đã xóa', 'ok'); APP.reload(); }
+      else toast('❌ ' + (r && r.error || 'Lỗi'), 'bad');
+    });
+  },
+
+  ping(id){
+    const t = S.tasks.find(x => x.id === id);
+    if(!t) return;
+    S.pingTargetId = id;
+    const ti = timeInfo(t);
+    const ds = displayStatus(t);
+    const lines = [
+      '🔔 PING PUSH CÔNG VIỆC',
+      '━━━━━━━━━━━━━━━━━━━━',
+      '📋 ' + (t.name || '—'),
+      '🔗 Link: ' + (t.link || '(không có)'),
+      '👤 Người TH: ' + (t.assigneeRole ? '[' + t.assigneeRole + '] ' : '') + (t.assignee || '—'),
+      '👥 Tham gia: ' + formatParticipantsPlain(t.participants),
+      '⏰ Deadline: ' + fmtDateTime(t.deadline),
+      '⏳ Còn lại: ' + ti.label,
+      '⚠ Trạng thái: ' + ds.label,
+      '🎯 Ưu tiên: ' + t.priority,
+      t.note ? '📝 ' + t.note : null,
+      '━━━━━━━━━━━━━━━━━━━━',
+      '👉 Vui lòng kiểm tra và cập nhật tiến độ!'
+    ].filter(Boolean).join('\n');
+    $('pingPreview').textContent = lines;
+    $('pingModal').classList.add('open');
+  },
+
+  closePing(){ $('pingModal').classList.remove('open'); S.pingTargetId = null; },
+
+  copyPing(){
+    const text = $('pingPreview').textContent;
+    const id = S.pingTargetId;
+    const done = ok => {
+      if(ok) toast('📋 Đã copy!', 'ok');
+      else toast('❌ Không copy được', 'bad');
+      if(ok && id) Data.ping(id, () => APP.reload());
+      APP.closePing();
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(() => done(true)).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { done(document.execCommand('copy')); } catch(e){ done(false); }
+        document.body.removeChild(ta);
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { done(document.execCommand('copy')); } catch(e){ done(false); }
+      document.body.removeChild(ta);
+    }
+  },
+
+  bulkPing(){
+    const due = S.tasks.filter(t => {
+      const ds = displayStatus(t);
+      return ds.cls === 'st-overdue' || ds.cls === 'st-soon';
+    });
+    if(!due.length){ toast('✅ Không có việc quá hạn / sắp hạn', 'info'); return; }
+    const blocks = due.map(t => {
+      const ti = timeInfo(t);
+      const ds = displayStatus(t);
+      return [
+        '📋 ' + t.name,
+        '👤 ' + (t.assigneeRole ? '[' + t.assigneeRole + '] ' : '') + (t.assignee || '—'),
+        '⏰ ' + fmtDateTime(t.deadline) + ' | ' + ti.label + ' | ' + ds.label,
+        t.link ? '🔗 ' + t.link : null
+      ].filter(Boolean).join('\n');
+    });
+    const msg = '🚨 PING PUSH – VIỆC CẦN XỬ LÝ GẤP\n━━━━━━━━━━━━━━━━━━━━\n'
+      + blocks.join('\n\n')
+      + '\n━━━━━━━━━━━━━━━━━━━━\n👉 Vui lòng phản hồi tình trạng!';
+    $('pingPreview').textContent = msg;
+    S.pingTargetId = null;
+    $('pingModal').classList.add('open');
+  }
+};
+window.APP = APP;
+
+/* =========================================================
+   EVENT BINDINGS
+   ========================================================= */
+function setupEvents(){
+  // Sidebar view
+  document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      S.currentView = btn.dataset.view;
+      S.currentRole = '';
+      renderAll();
+      // Đóng sidebar trên mobile
+      if(window.innerWidth <= 1024) $('sidebar').classList.remove('open');
+    });
+  });
+  // Sidebar role
+  document.querySelectorAll('.nav-item[data-role]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      S.currentRole = btn.dataset.role;
+      S.currentView = 'all';
+      renderAll();
+      if(window.innerWidth <= 1024) $('sidebar').classList.remove('open');
+    });
+  });
+
+  // View tabs
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      S.currentRender = tab.dataset.render;
+      $('viewTable').style.display = S.currentRender === 'table' ? '' : 'none';
+      $('viewKanban').style.display = S.currentRender === 'kanban' ? 'flex' : 'none';
+      renderAll();
+    });
+  });
+
+  // Filters
+  $('searchInput').addEventListener('input', renderAll);
+  $('filterPriority').addEventListener('change', renderAll);
+
+  // Deadline
+  $('fDeadline').addEventListener('input', updateDeadlineHint);
+  $('fDeadline').addEventListener('change', updateDeadlineHint);
+  $('importFile').addEventListener('change', e => APP.importData(e.target.files[0]));
+
+  // Modal backdrop click
+  document.querySelectorAll('.modal-backdrop').forEach(m => {
+    m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+  });
+  // ESC
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+  });
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function init(){
+  setupEvents();
+
+  // Lấy thông tin user & mode
+  if(S.mode === 'sheet'){
+    google.script.run.withSuccessHandler(info => {
+      if(info){
+        S.poster = info.user || '';
+        $('userName').textContent = info.user ? info.user.split('@')[0] : 'Owner';
+        $('userAvatar').textContent = (info.user || 'O').charAt(0).toUpperCase();
+      }
+    }).withFailureHandler(() => {}).getAppInfo();
+  } else {
+    S.poster = 'Trình duyệt này';
+    $('userName').textContent = 'Dữ liệu cục bộ';
+  }
+
+  APP.reload();
+  // Cập nhật "còn lại" mỗi phút
+  setInterval(() => { if(S.tasks.length) renderAll(); }, 60000);
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>
